@@ -21,6 +21,7 @@ search by travel time, and the REST API from a server.
 | [09-react](09-react/) | A complete listing page in React (Vite) with `YatmoMap`, `YatmoPois` and `YatmoNeighbourhoodText` | [@yatmo/react](https://www.npmjs.com/package/@yatmo/react) |
 | [10-web-components](10-web-components/) | The same with three HTML elements and one script from a CDN, no framework, no build | [@yatmo/elements](https://www.npmjs.com/package/@yatmo/elements) |
 | [11-vue](11-vue/) | The listing page in Vue 3 (Vite) with the same components | [@yatmo/vue](https://www.npmjs.com/package/@yatmo/vue) |
+| [12-webflow](12-webflow/) | A Webflow-style property page with no backend: three snippets fed by the address of the CMS (also Wix, Squarespace, Framer) | [Webflow tutorial](https://documentation.yatmo.com/plugins/webflow), [@yatmo/elements](https://www.npmjs.com/package/@yatmo/elements) |
 
 ## Run them
 

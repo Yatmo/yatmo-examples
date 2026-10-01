@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatmo example: a Webflow-style property page, no backend</title>
+  <meta name="description" content="A Webflow-style property page with the Yatmo map, the nearest places and the neighbourhood text, added with three Embed elements and no backend.">
+  <!-- Site-wide code (Webflow: Site settings > Custom code > Head code). Key, country and language once. -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@yatmo/elements@1/dist/yatmo-elements.js"></script>
+  <yatmo-config id="config" country="BE" language="EN"></yatmo-config>
+  <style>
+    :root { --ink: #1a1a1a; --muted: #6b7280; --accent: #0f766e; --line: #e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: #fff; line-height: 1.6; }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 40px; border-bottom: 1px solid var(--line); }
+    .nav .brand { font-weight: 800; letter-spacing: -0.02em; font-size: 20px; text-decoration: none; color: var(--ink); }
+    .nav .links a { margin-left: 28px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 15px; }
+    .nav .cta { background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .hero { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; padding: 40px 0 8px; align-items: end; }
+    .gallery { aspect-ratio: 16 / 10; border-radius: 16px; background: linear-gradient(135deg, #d9e9e6, #9fc4bd); display: grid; place-items: center; color: #1f4d47; font-weight: 600; }
+    .facts h1 { font-size: 34px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .facts .price { font-size: 26px; font-weight: 700; color: var(--accent); margin: 0 0 16px; }
+    .facts dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; font-size: 15px; }
+    .facts dt { color: var(--muted); }
+    .facts dd { margin: 0; font-weight: 500; }
+    .facts .btn { display: inline-block; margin-top: 20px; background: var(--accent); color: #fff; padding: 12px 22px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+    section { padding: 36px 0 0; }
+    section h2 { font-size: 24px; letter-spacing: -0.02em; margin: 0 0 16px; }
+    .desc { color: #374151; max-width: 760px; }
+    /* The Yatmo elements render plain HTML inside the page: these rules are the "custom code" of the tutorial. */
+    yatmo-pois { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 28px; }
+    yatmo-pois h3, yatmo-text h3 { font-size: 16px; margin: 18px 0 4px; }
+    yatmo-pois h3 { color: var(--muted); font-weight: 600; font-size: 14px; margin: 14px 0 2px; }
+    yatmo-pois ul { list-style: none; padding: 0; margin: 0; }
+    yatmo-text p { color: #374151; margin: 0 0 6px; }
+    footer { margin-top: 56px; padding: 24px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+    @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } .nav { padding: 16px 20px; } .nav .links { display: none; } }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="#">Maison Demo</a>
+    <div class="links"><a href="#">Buy</a><a href="#">Rent</a><a href="#">Agencies</a><a class="cta" href="#">Book a visit</a></div>
+  </nav>
+  <main class="wrap">
+    <div class="hero">
+      <div class="gallery">Photo gallery</div>
+      <div class="facts">
+        <h1>Bright 2-bedroom apartment, Rue de la Loi</h1>
+        <p class="price">€ 395 000</p>
+        <dl>
+          <dt>Surface</dt><dd>92 m²</dd>
+          <dt>Bedrooms</dt><dd>2</dd>
+          <dt>Floor</dt><dd>3 / 5, lift</dd>
+          <dt>Energy</dt><dd>C</dd>
+        </dl>
+        <a class="btn" href="#">Book a visit</a>
+      </div>
+    </div>
+
+    <section>
+      <h2>About this home</h2>
+      <p class="desc">Third floor of a 1930s building, south-facing living room, fitted kitchen, cellar and bicycle storage. Free of occupation.</p>
+    </section>
+
+    <!-- Embed element 1: the map. In Webflow, ADDRESS_FROM_CMS is replaced by the Address field (+ Add Field). -->
+    <section>
+      <h2>Neighbourhood</h2>
+      <yatmo-map address="Rue de la Loi 16, 1000 Bruxelles" marker="circle" circle-radius="300" isochrone="right" rounded="12" height="520"></yatmo-map>
+    </section>
+
+    <!-- Embed element 2: the nearest places with walking times. -->
+    <section>
+      <h2>Around the property</h2>
+      <yatmo-pois address="Rue de la Loi 16, 1000 Bruxelles" categories="education,transport,shopping" mode="walking"></yatmo-pois>
+    </section>
+
+    <!-- Embed element 3: the neighbourhood text. -->
+    <section>
+      <h2>Living here</h2>
+      <yatmo-text address="Rue de la Loi 16, 1000 Bruxelles" heading="h3" titles="street-city"></yatmo-text>
+    </section>
+  </main>
+  <footer>Maison Demo, a Webflow-style page. Neighbourhood data by <a href="https://yatmo.com">Yatmo</a>.</footer>
+  <script src="../config.js"></script>
+  <script>
+    // The shared config of the examples feeds <yatmo-config>; on Webflow, write the key in the attribute.
+    document.getElementById('config').setAttribute('key', YATMO.licenseKey);
+  </script>
+</body>
+</html>
