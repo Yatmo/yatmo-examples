@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatmo example: summary table</title>
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+  <header>
+    <h1>Summary table</h1>
+    <p>The nearest places by category with distance and travel time, without a map.
+      <a href="https://documentation.yatmo.com/plugins/js-summary">Documentation</a></p>
+  </header>
+  <main>
+    <div id="summary"></div>
+  </main>
+  <script src="../config.js"></script>
+  <script>
+    yatmoSummaryConfig = {
+      licenseKey: YATMO.licenseKey,
+      language: YATMO.language,
+      country: YATMO.country,
+      container: 'summary',
+      latitude: YATMO.latitude,
+      longitude: YATMO.longitude,
+    };
+  </script>
+  <script src="https://map.yatmo.com/summary.js"></script>
+</body>
+</html>

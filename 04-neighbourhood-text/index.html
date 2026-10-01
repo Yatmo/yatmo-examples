@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatmo example: neighbourhood text</title>
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+  <header>
+    <h1>Neighbourhood text</h1>
+    <p>A written description of the area (education, shopping, public transport, roads, leisure, nearby cities) as
+      headings and paragraphs, with the key places in bold. Rendered here by JavaScript; for search engines, write the
+      same text into the page on the server with the <a href="https://documentation.yatmo.com/api/endpoints/summary">API</a>,
+      the <a href="https://wordpress.org/plugins/yatmo-map/">WordPress plugin</a> or the
+      <a href="https://apps.odoo.com/apps/modules/20.0/yatmo_map">Odoo module</a>.
+      <a href="https://documentation.yatmo.com/plugins/js-summary-text">Documentation</a></p>
+  </header>
+  <main>
+    <article id="summaryText"></article>
+  </main>
+  <script src="../config.js"></script>
+  <script>
+    yatmoSummaryTextConfig = {
+      licenseKey: YATMO.licenseKey,
+      language: YATMO.language,
+      country: YATMO.country,
+      latitude: YATMO.latitude,
+      longitude: YATMO.longitude,
+      beginStrongTag: '<strong>',
+      endStrongTag: '</strong>',
+    };
+
+    // Called by summary-text.js with the paragraphs and three flavours of titles.
+    // titlesIcons[] gives a stable category key per paragraph: 'education', 'shopping',
+    // 'transports', 'publictransports', 'cities'.
+    function addSummaryTextWithTitles(paragraphs, titles, alternativeTitlesStreet, alternativeTitlesCity, titlesIcons) {
+      const host = document.getElementById('summaryText');
+      paragraphs.forEach(function (paragraph, index) {
+        if (titles.length > 0) {
+          let title;
+          switch (index) {
+            case 0: title = alternativeTitlesCity[index] || titles[index]; break;    // city name in the first heading
+            case 1: title = alternativeTitlesStreet[index] || titles[index]; break;  // street name in the second
+            default: title = titles[index];
+          }
+          const h = document.createElement('h3');
+          h.textContent = title;
+          host.appendChild(h);
+        }
+        const p = document.createElement('p');
+        p.innerHTML = paragraph;
+        host.appendChild(p);
+      });
+    }
+  </script>
+  <script src="https://map.yatmo.com/summary-text.js"></script>
+</body>
+</html>

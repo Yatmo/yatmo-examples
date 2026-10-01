@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatmo example: a complete property page</title>
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    .listing { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+    .gallery { aspect-ratio: 16 / 10; border-radius: 12px; background: linear-gradient(135deg, #dfe8fb, #b9c9ec); display: grid; place-items: center; color: #3b4f7a; font-weight: 600; }
+    .facts { border: 1px solid #e3e7ee; border-radius: 12px; padding: 20px; position: sticky; top: 16px; }
+    .price { font-size: 1.8rem; font-weight: 700; margin: 0 0 4px; }
+    .facts dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 16px 0 0; }
+    .facts dt { color: #666; }
+    .facts dd { margin: 0; }
+    .cta { display: block; margin-top: 16px; padding: 12px; text-align: center; background: #428BFF; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    section { margin-top: 32px; }
+    section h2 { font-size: 1.25rem; margin: 0 0 12px; }
+    #neighbourhood-text h3 { margin: 20px 0 6px; }
+    @media (max-width: 820px) { .listing { grid-template-columns: 1fr; } .facts { position: static; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bright 2-bedroom flat, Rue de la Loi, Brussels</h1>
+    <p>A complete listing page: photos and facts above, then the Yatmo map with the points of interest and travel
+      times, then the neighbourhood text. Everything below "Neighbourhood" comes from Yatmo.</p>
+  </header>
+  <main>
+    <div class="listing">
+      <div>
+        <div class="gallery">Photo gallery</div>
+        <section>
+          <h2>Description</h2>
+          <p>Second floor, 92 m², south-facing living room, fully equipped kitchen, two bedrooms, cellar and bicycle
+            storage. Energy class B. Free of occupation.</p>
+        </section>
+      </div>
+      <aside class="facts">
+        <p class="price">€ 395 000</p>
+        <div>Flat · 92 m² · 2 bedrooms</div>
+        <dl>
+          <dt>Floor</dt><dd>2 / 5, lift</dd>
+          <dt>Year</dt><dd>1998, renovated 2021</dd>
+          <dt>EPC</dt><dd>B (112 kWh/m²/year)</dd>
+          <dt>Charges</dt><dd>€ 140 / month</dd>
+        </dl>
+        <a class="cta" href="#contact">Book a visit</a>
+      </aside>
+    </div>
+
+    <section>
+      <h2>Neighbourhood</h2>
+      <!-- The iframe plugin: map, points of interest, travel times and the summary over the map. -->
+      <iframe id="yatmo" title="Map and neighbourhood of the property" allow="fullscreen" loading="lazy"
+              style="display:block;width:100%;height:560px;border:0;border-radius:12px"></iframe>
+    </section>
+
+    <section>
+      <h2>Living here</h2>
+      <!-- The neighbourhood text. On a real site, render it on the server (API, WordPress plugin or Odoo module)
+           so search engines index it; here it is fetched by JavaScript for the demo. -->
+      <article id="neighbourhood-text"></article>
+    </section>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    document.getElementById('yatmo').src = 'https://map.yatmo.com/plugin.html?' + new URLSearchParams({
+      licenseKey: YATMO.licenseKey,
+      country: YATMO.country,
+      language: YATMO.language,
+      latitude: YATMO.latitude,
+      longitude: YATMO.longitude,
+      mode: 'overlay',
+      zoom: 15,
+      accentColor: '#428BFF',
+      marker: 'circle',             // hides the exact address
+      circleRadiusInMeters: 300,
+      isochrone: 'right',
+      rounded: '12px',
+    });
+
+    yatmoSummaryTextConfig = {
+      licenseKey: YATMO.licenseKey,
+      language: YATMO.language,
+      country: YATMO.country,
+      latitude: YATMO.latitude,
+      longitude: YATMO.longitude,
+      beginStrongTag: '<strong>',
+      endStrongTag: '</strong>',
+    };
+    function addSummaryTextWithTitles(paragraphs, titles, alternativeTitlesStreet, alternativeTitlesCity) {
+      const host = document.getElementById('neighbourhood-text');
+      paragraphs.forEach(function (paragraph, index) {
+        if (titles.length > 0) {
+          const h = document.createElement('h3');
+          // Discreet listing: city name in the first heading, never the street name.
+          h.textContent = (index === 0 && alternativeTitlesCity[index]) || titles[index];
+          host.appendChild(h);
+        }
+        const p = document.createElement('p');
+        p.innerHTML = paragraph;
+        host.appendChild(p);
+      });
+    }
+  </script>
+  <script src="https://map.yatmo.com/summary-text.js"></script>
+</body>
+</html>

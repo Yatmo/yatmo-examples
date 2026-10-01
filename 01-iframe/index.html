@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatmo example: iframe plugin</title>
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+  <header>
+    <h1>Iframe plugin</h1>
+    <p>One iframe, configured by URL parameters. Pick a display mode; the URL used is shown under the map.
+      <a href="https://documentation.yatmo.com/plugins/iframe">Documentation</a></p>
+    <nav id="modes"></nav>
+  </header>
+  <main>
+    <iframe id="yatmo" title="Map and neighbourhood of the property" allow="fullscreen" loading="lazy"
+            style="display:block;width:100%;height:560px;border:0"></iframe>
+    <pre id="url"></pre>
+  </main>
+  <script src="../config.js"></script>
+  <script>
+    const modes = {
+      'overlay': 'Map + summary',
+      'overlay-scores': 'Map + scores',
+      'map-top': 'Map above the summary',
+      'map': 'Map only',
+      'summary': 'Summary only',
+      'summary-tabs': 'Summary in tabs',
+    };
+    const nav = document.getElementById('modes');
+    function show(mode) {
+      const params = new URLSearchParams({
+        licenseKey: YATMO.licenseKey,
+        country: YATMO.country,
+        language: YATMO.language,
+        latitude: YATMO.latitude,
+        longitude: YATMO.longitude,
+        mode: mode,
+        zoom: 15,
+        mapStyle: 1,
+        accentColor: '#428BFF',
+        marker: 'pin',
+        isochrone: 'right',   // 5, 10 and 20 minute areas, panel on the right
+        routeFrom: 'right',   // route from the property to the place the visitor clicks
+      });
+      const src = 'https://map.yatmo.com/plugin.html?' + params;
+      document.getElementById('yatmo').src = src;
+      document.getElementById('url').textContent = src.replace(YATMO.licenseKey, 'YOUR_FRONTEND_KEY');
+      for (const a of nav.children) a.classList.toggle('active', a.dataset.mode === mode);
+    }
+    for (const [mode, label] of Object.entries(modes)) {
+      const a = document.createElement('a');
+      a.href = '#' + mode;
+      a.dataset.mode = mode;
+      a.textContent = label;
+      a.onclick = (e) => { e.preventDefault(); show(mode); };
+      nav.appendChild(a);
+    }
+    show(location.hash.slice(1) in modes ? location.hash.slice(1) : 'overlay');
+  </script>
+</body>
+</html>

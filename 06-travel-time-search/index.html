@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatmo example: search by travel time</title>
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    #map { width: 100%; height: 560px; }
+    #results { margin-top: 16px; }
+    #results li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Search by travel time</h1>
+    <p>"Homes within 15 minutes of my office by bike." The visitor types an address and a time; Yatmo draws the
+      reachable area and hands you the polygon. Your backend filters the listings with it; here, a handful of sample
+      listings is filtered in the browser and shown on the map.
+      <a href="https://documentation.yatmo.com/plugins/advanced/travel-time-search">Documentation</a></p>
+  </header>
+  <main>
+    <div id="map"></div>
+    <div id="results"><p>Search from an address to see the matching listings.</p></div>
+  </main>
+  <script src="../config.js"></script>
+  <script>
+    // Stand-ins for your database: a few listings around Brussels.
+    const LISTINGS = [
+      { id: 1, latitude: 50.8449, longitude: 4.3502, price: '€ 264 000', title: '1-bedroom flat', subtitle: 'Brussels centre', url: '#1' },
+      { id: 2, latitude: 50.8511, longitude: 4.3617, price: '€ 398 000', title: '3-bedroom house', subtitle: 'Schaerbeek', url: '#2' },
+      { id: 3, latitude: 50.8266, longitude: 4.3717, price: '€ 520 000', title: 'Loft', subtitle: 'Ixelles', url: '#3' },
+      { id: 4, latitude: 50.8702, longitude: 4.3160, price: '€ 310 000', title: '2-bedroom flat', subtitle: 'Jette', url: '#4' },
+      { id: 5, latitude: 50.8370, longitude: 4.4050, price: '€ 450 000', title: 'Townhouse', subtitle: 'Etterbeek', url: '#5' },
+      { id: 6, latitude: 50.8030, longitude: 4.3400, price: '€ 285 000', title: '2-bedroom flat', subtitle: 'Uccle', url: '#6' },
+    ];
+
+    yatmoConfig = {
+      licenseKey: YATMO.licenseKey,
+      language: YATMO.language,
+      country: YATMO.country,
+      container: 'map',
+      center: [4.3517, 50.8503],
+      zoom: 12,
+      startsWithPoisHidden: true,
+      accentColor: '#428BFF',
+      travelTimeSearch: {
+        defaultMinutes: 15,
+        defaultMode: 'Bicycling',
+        // shape = GeoJSON MultiPolygon of the reachable area, meta = { type, travelMode, minutes, origin }
+        onSearch: function (shape, meta) {
+          const inside = LISTINGS.filter((l) => pointInMultiPolygon([l.longitude, l.latitude], shape));
+          YatmoSearch.setListings(inside);   // clustered markers and price pills on the map
+          const results = document.getElementById('results');
+          results.innerHTML = '<p>' + inside.length + ' listing(s) within ' + meta.minutes + ' minutes (' + meta.travelMode +
+            ') of ' + (meta.origin.address || 'the chosen point') + '.</p><ul>' +
+            inside.map((l) => '<li><strong>' + l.price + '</strong> ' + l.title + ', ' + l.subtitle + '</li>').join('') + '</ul>';
+        },
+      },
+      listings: { items: [] },
+    };
+
+    // Point-in-polygon (ray casting) on a GeoJSON MultiPolygon, enough for a demo; your backend
+    // would run the same test in SQL (PostGIS ST_Within, SQL Server STIntersects...).
+    function pointInMultiPolygon(point, multi) {
+      return multi.coordinates.some((polygon) => inRing(point, polygon[0]) && !polygon.slice(1).some((hole) => inRing(point, hole)));
+    }
+    function inRing(p, ring) {
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+        if ((yi > p[1]) !== (yj > p[1]) && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+  </script>
+  <script src="https://map.yatmo.com/map_v3.js"></script>
+</body>
+</html>

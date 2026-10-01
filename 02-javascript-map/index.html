@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatmo example: JavaScript map</title>
+  <link rel="stylesheet" href="../shared.css">
+  <style>#map { width: 100%; height: 560px; }</style>
+</head>
+<body>
+  <header>
+    <h1>JavaScript map plugin</h1>
+    <p>The map rendered in your own element, with one config object: points of interest, route from the
+      property to the place the visitor clicks, full-screen button.
+      <a href="https://documentation.yatmo.com/plugins/js-map">Documentation</a></p>
+  </header>
+  <main>
+    <div id="map"></div>
+  </main>
+  <script src="../config.js"></script>
+  <script>
+    yatmoConfig = {
+      licenseKey: YATMO.licenseKey,
+      language: YATMO.language,
+      country: YATMO.country,
+      container: 'map',
+      center: [YATMO.longitude, YATMO.latitude],   // [longitude, latitude]
+      zoom: 16,
+      mapStyle: 1,
+      routeFrom: { latitude: YATMO.latitude, longitude: YATMO.longitude },
+      fullScreenButton: true,
+    };
+  </script>
+  <script src="https://map.yatmo.com/map_v3.js"></script>
+</body>
+</html>
