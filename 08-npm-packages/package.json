@@ -1,0 +1,14 @@
+{
+  "name": "yatmo-example-npm-packages",
+  "private": true,
+  "type": "module",
+  "description": "Yatmo from npm: @yatmo/sdk on the server, @yatmo/maps in the browser.",
+  "scripts": {
+    "text": "node neighbourhood-text.mjs",
+    "serve": "npx serve ."
+  },
+  "dependencies": {
+    "@yatmo/maps": "^1.0.0",
+    "@yatmo/sdk": "^1.0.0"
+  }
+}
