@@ -20,6 +20,7 @@ search by travel time, and the REST API from a server.
 | [08-npm-packages](08-npm-packages/) | The same from npm: `@yatmo/sdk` on the server (text as HTML, nearest places), `@yatmo/maps` in the browser | [@yatmo/sdk](https://www.npmjs.com/package/@yatmo/sdk), [@yatmo/maps](https://www.npmjs.com/package/@yatmo/maps) |
 | [09-react](09-react/) | A complete listing page in React (Vite) with `YatmoMap`, `YatmoPois` and `YatmoNeighbourhoodText` | [@yatmo/react](https://www.npmjs.com/package/@yatmo/react) |
 | [10-web-components](10-web-components/) | The same with three HTML elements and one script from a CDN, no framework, no build | [@yatmo/elements](https://www.npmjs.com/package/@yatmo/elements) |
+| [11-vue](11-vue/) | The listing page in Vue 3 (Vite) with the same components | [@yatmo/vue](https://www.npmjs.com/package/@yatmo/vue) |
 
 ## Run them
 
@@ -30,7 +31,7 @@ search by travel time, and the REST API from a server.
 3. Serve the folder with any static server, for example `npx serve .` or `python3 -m http.server`, and open an example.
    Opening the files directly (`file://`) does not work: the plugins are loaded from `map.yatmo.com`.
 
-No build step, no dependency: each example is one HTML file (08 and 09 add npm packages; 09 is a Vite app, see its README).
+No build step, no dependency: each example is one HTML file (08, 09 and 11 add npm packages; 09 and 11 are Vite apps, see their READMEs).
 
 ## Other integrations
 
