@@ -18,6 +18,8 @@ search by travel time, and the REST API from a server.
 | [06-travel-time-search](06-travel-time-search/) | "Homes within 15 minutes by bike": the reachable area and the matching listings on the map | [Travel-time search](https://documentation.yatmo.com/plugins/advanced/travel-time-search), [listings](https://documentation.yatmo.com/plugins/advanced/listings) |
 | [07-rest-api](07-rest-api/) | Summary and neighbourhood text from a server, in shell and Python | [REST API](https://documentation.yatmo.com/api) |
 | [08-npm-packages](08-npm-packages/) | The same from npm: `@yatmo/sdk` on the server (text as HTML, nearest places), `@yatmo/maps` in the browser | [@yatmo/sdk](https://www.npmjs.com/package/@yatmo/sdk), [@yatmo/maps](https://www.npmjs.com/package/@yatmo/maps) |
+| [09-react](09-react/) | A complete listing page in React (Vite) with `YatmoMap`, `YatmoPois` and `YatmoNeighbourhoodText` | [@yatmo/react](https://www.npmjs.com/package/@yatmo/react) |
+| [10-web-components](10-web-components/) | The same with three HTML elements and one script from a CDN, no framework, no build | [@yatmo/elements](https://www.npmjs.com/package/@yatmo/elements) |
 
 ## Run them
 
@@ -28,7 +30,7 @@ search by travel time, and the REST API from a server.
 3. Serve the folder with any static server, for example `npx serve .` or `python3 -m http.server`, and open an example.
    Opening the files directly (`file://`) does not work: the plugins are loaded from `map.yatmo.com`.
 
-No build step, no dependency: each example is one HTML file (08 adds the two npm packages).
+No build step, no dependency: each example is one HTML file (08 and 09 add npm packages; 09 is a Vite app, see its README).
 
 ## Other integrations
 
