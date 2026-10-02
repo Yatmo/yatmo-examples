@@ -23,6 +23,11 @@ search by travel time, and the REST API from a server.
 | [11-vue](11-vue/) | The listing page in Vue 3 (Vite) with the same components | [@yatmo/vue](https://www.npmjs.com/package/@yatmo/vue) |
 | [12-webflow](12-webflow/) | A Webflow-style property page with no backend: three snippets fed by the address of the CMS (also Wix, Squarespace, Framer) | [Webflow tutorial](https://documentation.yatmo.com/plugins/webflow), [@yatmo/elements](https://www.npmjs.com/package/@yatmo/elements) |
 
+## API description and Postman
+
+- [openapi/yatmo-openapi.yaml](openapi/yatmo-openapi.yaml): OpenAPI 3.1 description of the REST API (also served at https://documentation.yatmo.com/openapi.yaml), for code generators, GPT Actions and API tools.
+- [postman/Yatmo.postman_collection.json](postman/Yatmo.postman_collection.json): a Postman collection generated from it; import it, set `baseUrl` (your country host) and `LicenseKey` (your backend key), and every endpoint is one click away.
+
 ## Run them
 
 1. Get a Yatmo licence key: [yatmo.com](https://yatmo.com). The web examples use your **frontend** key, the one locked to

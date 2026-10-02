@@ -1,0 +1,658 @@
+openapi: 3.1.0
+info:
+  title: Yatmo API
+  version: "1.0"
+  summary: "Real estate neighbourhood data: points of interest, travel times, neighbourhood text, isochrones, routes, geocoding, static maps."
+  description: |
+    Yatmo computes neighbourhood intelligence for real estate websites in 25 countries: the places around a property
+    (schools, nurseries, supermarkets, public transport, stations, motorways, leisure) with real travel times on foot,
+    by bike, by car and by public transport, a written description of the neighbourhood in the languages of the
+    country, scores, isochrones, routes, geocoding and static map images.
+
+    Every request carries your **backend** licence key in the `LicenseKey` header. The host is the country of the
+    property: `https://be.yatmo.com`, `https://fr.yatmo.com`... (the `country` server variable). A key only covers the
+    countries of its licence.
+
+    Typed clients wrap this specification: `@yatmo/sdk` (npm), `yatmo/yatmo-php` (Packagist), `yatmo` (PyPI),
+    `Yatmo.Client` (NuGet). Plugins (iframe, JavaScript, WordPress, Odoo, Drupal) and an MCP server for AI assistants
+    are documented at https://documentation.yatmo.com.
+  termsOfService: https://yatmo.com/legal
+  contact:
+    name: Yatmo
+    url: https://yatmo.com
+    email: info@yatmo.com
+  license:
+    name: Proprietary (licence key required)
+    url: https://documentation.yatmo.com/license
+  x-logo:
+    url: https://yatmo.com/v3/assets/yatmo-logo.png
+    altText: Yatmo
+externalDocs:
+  description: Yatmo documentation
+  url: https://documentation.yatmo.com/api
+servers:
+  - url: https://{country}.yatmo.com
+    description: One host per country; the key must cover that country.
+    variables:
+      country:
+        default: be
+        description: Two-letter country code, lower case.
+        enum: [al, at, au, ba, be, bg, ca, ch, cy, de, es, fr, gr, hr, ie, it, lu, ma, me, mt, nl, pt, rs, si, uk]
+security:
+  - LicenseKey: []
+tags:
+  - name: Summary
+    description: What is around a position, as data and as text.
+  - name: Places
+    description: Points of interest and their categories.
+  - name: Travel
+    description: Isochrones and routes.
+  - name: Geocoding
+  - name: Images
+paths:
+  /summary:
+    get:
+      tags: [Summary]
+      operationId: getSummary
+      summary: Nearest places by category with travel times, closest cities, resolved address
+      description: The most used endpoint. Cached server-side for 7 days per position and language. Field names below the top level are short (see the schema).
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: The summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Summary"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /summary/text:
+    get:
+      tags: [Summary]
+      operationId: getSummaryText
+      summary: The written neighbourhood text, in every language of the country
+      description: |
+        Paragraphs (education, shopping, public transport, roads and stations, leisure, nearby cities) with a title and
+        sentences in each language the country serves. Key places are wrapped in `[STRONG]...[/STRONG]` markers, to turn
+        into `<strong>`. Cache it: a location rarely changes. The `language` parameter only orders the fallback.
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: The text.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SummaryText"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /summary/text-and-data:
+    get:
+      tags: [Summary]
+      operationId: getSummaryTextAndData
+      summary: The summary and the text in one call
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: Both objects.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Summary: { $ref: "#/components/schemas/Summary" }
+                  Text: { $ref: "#/components/schemas/SummaryText" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /scores:
+    get:
+      tags: [Summary]
+      operationId: getScores
+      summary: One 0 to 10 score per category
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: The scores.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scores:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        k: { type: string, description: Stable key of the category. }
+                        l: { type: string, description: Translated label. }
+                        v: { type: number, description: Score from 0 to 10. }
+                        iconId: { type: integer }
+                        pt: { type: integer, description: "Category type: 1 education, 2 transport, 3 shopping, 7 tourism." }
+                        st: { type: array, items: { type: integer }, description: Sub-types taken into account. }
+                  language: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /enrichment:
+    get:
+      tags: [Summary]
+      operationId: getEnrichment
+      summary: Listing enrichment, flat JSON to store and filter on
+      description: For one position, the nearest place of each category with routed distance and time on foot, by bike, by car and by public transport. Always the same list of categories for a country; `nearest` is null when nothing is within the search radius.
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - name: language
+          in: query
+          required: false
+          schema: { type: string, default: EN }
+          description: Language of the label fields only.
+      responses:
+        "200":
+          description: The enrichment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrichment"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503":
+          description: The routing engine did not answer; retry later, nothing was half computed.
+  /points:
+    get:
+      tags: [Places]
+      operationId: getPoints
+      summary: Points of interest inside a bounding box
+      parameters:
+        - name: bound1
+          in: query
+          required: true
+          schema: { type: string, example: "50.83,4.31" }
+          description: First corner as "latitude,longitude".
+        - name: bound2
+          in: query
+          required: true
+          schema: { type: string, example: "50.87,4.40" }
+          description: Opposite corner as "latitude,longitude".
+        - $ref: "#/components/parameters/language"
+        - name: poiTypesIds
+          in: query
+          schema: { type: string }
+          description: Comma-separated place-type ids from /SimplifiedCategories; an id ending in 000001 means every variant of the type.
+        - name: groupSamePositions
+          in: query
+          schema: { type: boolean, default: false }
+          description: Collapse places sharing a coordinate into one entry.
+        - name: caringForBigResponse
+          in: query
+          schema: { type: boolean, default: true }
+          description: Reject bounding boxes too large to compute.
+        - name: summaryMode
+          in: query
+          schema: { type: boolean, default: false }
+          description: Return a sampled subset (one per category) for an overview map.
+      responses:
+        "200":
+          description: The places.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Poi"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /categories:
+    get:
+      tags: [Places]
+      operationId: getCategories
+      summary: Hierarchical, localized category list
+      parameters:
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: The categories.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /SimplifiedCategories:
+    get:
+      tags: [Places]
+      operationId: getSimplifiedCategories
+      summary: Category groups and their place-type ids, for filtering /points
+      parameters:
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: Group name to the list of place-type ids.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: integer, format: int64 }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /isochrone:
+    get:
+      tags: [Travel]
+      operationId: getIsochrone
+      summary: The area reachable in a travel time, as a GeoJSON geometry
+      parameters:
+        - $ref: "#/components/parameters/travelMode"
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - name: numberOfSeconds
+          in: query
+          required: true
+          schema: { type: integer, example: 600 }
+          description: Travel-time limit in seconds; 300, 600 and 1200 are the standard values.
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: A GeoJSON Feature (property `geometry` holds the Polygon or MultiPolygon).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoJsonFeature"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /isochrone/GetMultipleTimes:
+    get:
+      tags: [Travel]
+      operationId: getIsochrones
+      summary: The 5, 10 and 20 minute areas in one call
+      parameters:
+        - $ref: "#/components/parameters/travelMode"
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: One entry per horizon.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    label: { type: string, example: "5 min" }
+                    iso: { $ref: "#/components/schemas/GeoJsonGeometry" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /route:
+    get:
+      tags: [Travel]
+      operationId: getRoute
+      summary: Route and travel time between two points
+      parameters:
+        - $ref: "#/components/parameters/travelMode"
+        - { name: startLatitude, in: query, required: true, schema: { type: number, format: double } }
+        - { name: startLongitude, in: query, required: true, schema: { type: number, format: double } }
+        - { name: arrivalLatitude, in: query, required: true, schema: { type: number, format: double } }
+        - { name: arrivalLongitude, in: query, required: true, schema: { type: number, format: double } }
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: GraphHopper-style paths.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paths:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        distance: { type: number, description: Metres. }
+                        time: { type: number, description: Milliseconds. }
+                        points: { $ref: "#/components/schemas/GeoJsonGeometry" }
+                        instructions: { type: array, items: { type: object } }
+                  info: { type: object }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /geolocation:
+    get:
+      tags: [Geocoding]
+      operationId: geocode
+      summary: An address to coordinates, inside the country
+      parameters:
+        - name: address
+          in: query
+          required: true
+          schema: { type: string, example: "Rue de la Loi 16, 1000 Bruxelles" }
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: GeoJSON FeatureCollection, best match first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoJsonFeatureCollection"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /geolocation/GetClose:
+    get:
+      tags: [Geocoding]
+      operationId: geocodeNear
+      summary: Address autocomplete around a position
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - name: address
+          in: query
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: GeoJSON FeatureCollection.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoJsonFeatureCollection"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /image:
+    get:
+      tags: [Images]
+      operationId: getStaticMap
+      summary: A JPEG of the map around a property
+      parameters:
+        - $ref: "#/components/parameters/latitude"
+        - $ref: "#/components/parameters/longitude"
+        - { name: hexaColor, in: query, required: true, schema: { type: string, example: "428BFF" }, description: "Hex colour of the pin, without the # sign." }
+        - { name: width, in: query, required: true, schema: { type: integer, example: 800 } }
+        - { name: height, in: query, required: true, schema: { type: integer, example: 450 } }
+        - { name: mapStyle, in: query, schema: { type: integer, minimum: 1, maximum: 7, default: 1 } }
+        - { name: threeDMode, in: query, schema: { type: boolean, default: false } }
+        - { name: bigIcon, in: query, schema: { type: boolean, default: false } }
+        - { name: multiborders, in: query, schema: { type: boolean, default: false } }
+        - { name: customMarkerUrl, in: query, schema: { type: string, format: uri } }
+        - { name: customMarkerWidth, in: query, schema: { type: integer } }
+        - { name: customMarkerHeight, in: query, schema: { type: integer } }
+        - $ref: "#/components/parameters/language"
+      responses:
+        "200":
+          description: The image.
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    LicenseKey:
+      type: apiKey
+      in: header
+      name: LicenseKey
+      description: Your Yatmo backend key (https://documentation.yatmo.com/license). `LicenceKey` is accepted too.
+  parameters:
+    latitude:
+      name: latitude
+      in: query
+      required: true
+      schema: { type: number, format: double, example: 50.8461 }
+      description: Latitude in decimal degrees, inside the country of the host.
+    longitude:
+      name: longitude
+      in: query
+      required: true
+      schema: { type: number, format: double, example: 4.3664 }
+      description: Longitude in decimal degrees, inside the country of the host.
+    language:
+      name: language
+      in: query
+      required: true
+      schema: { type: string, example: FR }
+      description: ISO 639-1 code (EN, FR, NL, DE, IT, ES, PT, CA, ZH, HI, AR, RU, JA, EL, HR, MT, SL, SR, TR, BS, SQ, BG) or CNR; falls back to EN when the country does not serve it.
+    travelMode:
+      name: travelMode
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [Driving, Walking, Bicycling, Transit, "1", "2", "3", "4"]
+      description: Name or number, interchangeable (Driving 1, Walking 2, Bicycling 3, Transit 4).
+  responses:
+    BadRequest:
+      description: A parameter is wrong, or the position lies outside the country of the host.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: The key is missing or unknown.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: The licence does not cover this country or endpoint, or the key is a frontend key.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TooManyRequests:
+      description: The licence quota is exhausted, or too many computations are in progress.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      properties:
+        Error: { type: string, example: "Your account is authorized to access to the following countries: FR." }
+    TravelData:
+      type: object
+      description: One entry per travel mode.
+      properties:
+        tm: { type: integer, description: "Mode: 1 driving, 2 walking, 3 bicycling, 4 transit." }
+        ttm: { type: string, description: The mode as a translated label. }
+        hti: { type: boolean, description: False when that mode has no travel information. }
+        ptdd: { type: integer, description: Network distance in metres. }
+        ptdll: { type: string, description: Distance, long label. }
+        ptdsl: { type: string, description: Distance, short label. }
+        tt: { type: integer, description: Time in seconds. }
+        ttll: { type: string, description: Time, long label. }
+        ttsl: { type: string, description: Time, short label. }
+        ttesl: { type: string, description: Time, extra short label. }
+    SummaryPlace:
+      type: object
+      properties:
+        id: { type: integer, format: int64, description: Place-type id, the same ids as /SimplifiedCategories. }
+        n: { type: string, description: Name. }
+        la: { type: number, format: double }
+        lo: { type: number, format: double }
+        i: { type: integer, description: Icon. }
+        si: { type: integer, description: Sub-icon. }
+        sd: { type: string, description: Specific data (IATA code, line...). }
+        td:
+          type: array
+          items: { $ref: "#/components/schemas/TravelData" }
+    Summary:
+      type: object
+      description: Top-level names are long, everything below is short.
+      properties:
+        AvailableCategoriesAroundPosition:
+          type: array
+          items:
+            type: object
+            properties:
+              ct: { type: integer, description: "Category: 1 education, 2 transport, 3 shopping, 7 tourism." }
+              l: { type: string, description: Translated label. }
+              sc:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    st: { type: integer, description: Sub-type. }
+                    l: { type: string, description: Plural label. }
+                    lb: { type: string, description: Singular label. }
+                    d:
+                      type: array
+                      items: { $ref: "#/components/schemas/SummaryPlace" }
+        CloseCities:
+          type: array
+          items:
+            type: object
+            properties:
+              n: { type: object, additionalProperties: { type: string }, description: Name per language. }
+              td: { type: array, items: { $ref: "#/components/schemas/TravelData" } }
+              c:
+                type: object
+                properties:
+                  Latitude: { type: number, format: double }
+                  Longitude: { type: number, format: double }
+        PlaceInformation:
+          type: object
+          nullable: true
+          properties:
+            StreetName: { type: string }
+            IsLocality: { type: boolean }
+            CityName: { type: string }
+            ZipCode: { type: string }
+            LocalizedStreetNames: { type: object, additionalProperties: { type: string } }
+            LocalizedCityNames: { type: object, additionalProperties: { type: string } }
+    LocalizedText:
+      type: object
+      description: Language code to text.
+      additionalProperties: { type: string }
+      example: { FR: "Commerces près de la Rue de la Loi", EN: "Shops near Rue de la Loi" }
+    SummaryText:
+      type: object
+      properties:
+        Paragraphs:
+          type: array
+          items:
+            type: object
+            properties:
+              IconId: { type: string, description: "Stable paragraph type: education, shopping, publictransports, transports, tourism, cities." }
+              Title: { $ref: "#/components/schemas/LocalizedText" }
+              TitleBis: { $ref: "#/components/schemas/LocalizedText", description: Title naming the street. }
+              TitleTer: { $ref: "#/components/schemas/LocalizedText", description: Title naming the city. }
+              Sentences:
+                type: array
+                items: { $ref: "#/components/schemas/LocalizedText" }
+                description: Sentences with [STRONG] markers around the key places.
+              List:
+                type: array
+                items: { $ref: "#/components/schemas/LocalizedText" }
+    Enrichment:
+      type: object
+      properties:
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        country: { type: string }
+        language: { type: string }
+        searchRadiusMeters: { type: integer, example: 25000 }
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer, format: int64 }
+              key: { type: string, example: Children.ElementarySchool }
+              group: { type: string, enum: [Children, Transports, Shopping] }
+              label: { type: string }
+              nearest:
+                type: object
+                nullable: true
+                properties:
+                  name: { type: string }
+                  latitude: { type: number, format: double }
+                  longitude: { type: number, format: double }
+                  straightLineDistanceMeters: { type: integer }
+                  walking: { $ref: "#/components/schemas/Trip" }
+                  bicycling: { $ref: "#/components/schemas/Trip" }
+                  driving: { $ref: "#/components/schemas/Trip" }
+                  transit: { $ref: "#/components/schemas/Trip" }
+    Trip:
+      type: object
+      nullable: true
+      properties:
+        distanceMeters: { type: integer }
+        durationSeconds: { type: integer }
+        durationMinutes: { type: integer, description: Rounded up. }
+    Poi:
+      type: object
+      properties:
+        n: { type: string, description: Name. }
+        t: { type: string, description: Translated type label. }
+        la: { type: number, format: double }
+        ln: { type: number, format: double }
+        p: { type: string, description: Place-type id, read as category 4, subcategory 4, variant 6. }
+        i: { type: string, description: Icon index. }
+        si: { type: string, description: Sub-icon index. }
+        sd: { type: string, description: Specific data. }
+        fid: { type: string }
+        rpt: { type: string }
+        g: { type: boolean, description: Several grouped places. }
+    Category:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        l: { type: string, description: Localized name. }
+        aid: { type: integer, format: int64, description: Parent id. }
+        i: { type: integer, description: Icon index. }
+        c:
+          type: array
+          items: { $ref: "#/components/schemas/Category" }
+    GeoJsonGeometry:
+      type: object
+      properties:
+        type: { type: string, example: Polygon }
+        coordinates: { type: array, items: {} }
+    GeoJsonFeature:
+      type: object
+      properties:
+        type: { type: string, example: Feature }
+        geometry: { $ref: "#/components/schemas/GeoJsonGeometry" }
+        properties: { type: object }
+    GeoJsonFeatureCollection:
+      type: object
+      properties:
+        type: { type: string, example: FeatureCollection }
+        features:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string, example: Feature }
+              geometry:
+                type: object
+                properties:
+                  type: { type: string, example: Point }
+                  coordinates: { type: array, items: { type: number }, description: "[longitude, latitude]" }
+              properties:
+                type: object
+                properties:
+                  name: { type: string }
+                  street: { type: string }
+                  housenumber: { type: string }
+                  postcode: { type: string }
+                  city: { type: string }
+                  country: { type: string }
+                  countrycode: { type: string }
+                  type: { type: string }
